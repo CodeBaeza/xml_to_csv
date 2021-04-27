@@ -22,6 +22,7 @@ def xml_generated_csv():
             absolute_path = os.path.abspath(absolute_path)
             doc_xml = ET.parse(absolute_path)
             generate_csv(doc_xml)
+            print(absolute_path)
             print(doc_xml)
         print("El .csv fue creado")
     except OSError as e:
@@ -44,6 +45,8 @@ def generate_csv(file_xml):
 
     for element in file_xml.iter("cd"):
         list_nodes = []
+        identificador = element.find("id").text
+        list_nodes.append(identificador)
         cancion = element.find("cancion").text
         list_nodes.append(cancion)
         artista = element.find("artista").text
@@ -56,29 +59,24 @@ def generate_csv(file_xml):
 
 def connection():
     """Función que nos conecta con la base de datos, si la conexión es realizada correctamente, esta funcion además
-    de pasarle el fichero .csv, cargara los datos de ese fichero en la base de datos"""
+      de pasarle el fichero .csv, cargara los datos de ese fichero en la base de datos"""
 
     mariadb_conexion = mariadb.connect(host='localhost', port='3306', user='root', password='', database='pruebazalcu')
     if mariadb_conexion.is_connected():
         print("Conexión realizada")
-        with open("xmlPrueba.csv")as csv_file:
+        with open("xmlPrueba.csv") as csv_file:
             csv_file = csv.reader(csv_file, delimiter=",")
-            for row in csv_file:
-                if len(row) == 3:
-                    value1 = row[0]
-                    value2 = row[1]
-                    value3 = row[2]
-                    query = "INSERT INTO catalogo values ('%s','%s','%s')" % (value1, value2, value3)
-                    mycursor = mariadb_conexion.cursor()
-                    mycursor.execute(query)
-                    mariadb_conexion.commit()
+            mycursor = mariadb_conexion.cursor()
+            query ="LOAD DATA INFILE 'D:/ProyectosPython/xml_to_csv/xmlPrueba.csv' INTO TABLE catalogo FIELDS TERMINATED BY ','LINES TERMINATED BY '\n'"
+            mycursor.execute(query)
+            mariadb_conexion.commit()
         print("Datos cargados correctamente en la base de datos")
 
 
 def main():
     xml_generated_csv()
     data_frame = pd.read_csv("xmlPrueba.csv", delimiter=",")
-    print(data_frame)
+    print (data_frame)
     connection()
 
 
