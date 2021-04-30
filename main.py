@@ -5,6 +5,7 @@ from os import listdir, path
 from os.path import isfile, join
 import pandas as pd
 import mysql.connector as mariadb
+from Catalogo import *
 
 """Programa que recoge el contenido de un número indefinido de ficheros .xml, ese contenido lo guarda en un 
     fichero .csv que nosotros establecemos y por último cargamos ese contenido en una base de datos"""
@@ -31,7 +32,6 @@ def xml_generated_csv():
 
 def input_path():
     """Función sencilla que nos pide la ruta del directorio y lo guarda en una variable que luego la devuelve"""
-
     path = input("Introduce el path del directorio: ")
     return path
 
@@ -44,16 +44,15 @@ def generate_csv(file_xml):
     csv_writer = csv.writer(xml_to_csv)
 
     for element in file_xml.iter("cd"):
-        list_nodes = []
         identificador = element.find("id").text
-        list_nodes.append(identificador)
         cancion = element.find("cancion").text
-        list_nodes.append(cancion)
         artista = element.find("artista").text
-        list_nodes.append(artista)
         precio = element.find("precio").text
-        list_nodes.append(precio)
-        csv_writer.writerow(list_nodes)
+        objeto_catalogo = Catalogo(identificador, cancion, artista, precio)
+        conversion = str(objeto_catalogo)
+        lista_nodes =[conversion]
+        print(conversion)
+        csv_writer.writerow(objeto_catalogo)
     xml_to_csv.close()
 
 
@@ -67,7 +66,7 @@ def connection():
         with open("xmlPrueba.csv") as csv_file:
             csv_file = csv.reader(csv_file, delimiter=",")
             mycursor = mariadb_conexion.cursor()
-            query ="LOAD DATA INFILE 'D:/ProyectosPython/xml_to_csv/xmlPrueba.csv' INTO TABLE catalogo FIELDS TERMINATED BY ','LINES TERMINATED BY '\n'"
+            query = "LOAD DATA INFILE 'D:/ProyectosPython/xml_to_csv/xmlPrueba.csv' INTO TABLE catalogo FIELDS TERMINATED BY ','LINES TERMINATED BY '\n'"
             mycursor.execute(query)
             mariadb_conexion.commit()
         print("Datos cargados correctamente en la base de datos")
@@ -76,8 +75,8 @@ def connection():
 def main():
     xml_generated_csv()
     data_frame = pd.read_csv("xmlPrueba.csv", delimiter=",")
-    print (data_frame)
-    connection()
+    print(data_frame)
+    #connection()
 
 
 if __name__ == "__main__":
